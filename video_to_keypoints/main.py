@@ -4,7 +4,6 @@ import pickle
 import os
 from tqdm import tqdm
 
-
 if __name__ == '__main__':
     complete_file_list = os.listdir(r'\\FIXE_ROMAIN\Dataset deeplearning')
     filelist = []
@@ -35,7 +34,7 @@ if __name__ == '__main__':
                         # If loading a video, use 'break' instead of 'continue'.
                         break
 
-                   # To improve performance, optionally mark the image as not writeable to
+                    # To improve performance, optionally mark the image as not writeable to
                     # pass by reference.
                     image.flags.writeable = False
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -45,6 +44,7 @@ if __name__ == '__main__':
                     OUTPUT_multi_hand_world_landmarks.append(results.multi_hand_world_landmarks)
                     OUTPUT_multi_handedness.append(results.multi_handedness)
                     pbar.update(1)
+        print(len(OUTPUT_frame))
         with open('pkl/FRAME/' + file.replace('.mp4', '_') + 'FRAME.pkl', 'wb') as outfile:
             pickle.dump(OUTPUT_frame, outfile, pickle.HIGHEST_PROTOCOL)
         with open('pkl/MULTI_HAND_LANDMARKS/' + file.replace('.mp4', '_') + 'MULTI_HAND_LANDMARKS.pkl',
