@@ -1,10 +1,11 @@
 import os
 import pysrt
 import time
+import pickle
 
 if __name__ == '__main__':
     filesName = []
-    allSubtitles = []
+    allSubtitles = [["" , []]]
 
     # C:\Users\romai\Dataset deeplearning
     # r'\FIXE_ROMAIN\Dataset deeplearning'
@@ -21,68 +22,35 @@ if __name__ == '__main__':
                 file = file + "_en.srt"
                 if file in complete_file_list and file not in filelist:
                     filelist.append(file)
-
     for file in filelist:
         paragraphes = [[]]
-        listOfParagraphes = []
         # subtitleNumber = []
         f = open("C:/Users/romai/DatasetDeeplearning/" + file, encoding='utf-8')
         lines = f.readlines()
-        #print(lines)
-        #time.sleep(1)
         for line in lines:  # Separates paragraphes
-            #print(line)
             if line == '\n':
                 paragraphes.append([])
             else:
                 paragraphes[-1].append(line)
-            print("########")
-            print(paragraphes[-1])
-            print("########")
-        time.sleep(10)
-        #print("Before removing : " + str(paragraphes[-1]))
         for i in range(3):
-            paragraphes.pop(-1)
+            paragraphes.pop(-1) # Remove blank lines at the end
 
-
-
-        #print("After removing : " + str(paragraphes[-1]))
-
-
-
-        # sortie : paragraphes
-
-        iterations = 0
-        editedParagraphe = []
-        paragraphe = [None, None, None,]
+        paragraphesWithoutSentences = []
+        paragraphesWithSentences = []
         for element in paragraphes:
-            #print(str(iterations) + "/" + str(len(paragraphes)))
-            iterations+=1
-            # subtitleNumber.append(paragraphe[0])
-            #print(element[1][0:11])
-            #print(element[1][17:28])
-            print("#################")
-            print(element)
-            print(str(element[1][0:11]))
-            print(str(element[1][17:28]))
-            print("#################")
-            paragraphe[1] = [str(element[1][0:11]) + str(element[1][17:28])]
+            text = element[2][3:]
 
-            if not " " in element[2][3:]:  # If not a phrase
-                paragraphe[2] = element[2][3:]
+            if " " not in text:
+                paragraphesWithoutSentences.append(element)
+            else:
+                paragraphesWithSentences.append(element)
 
-            #print(element)
-            editedParagraphe.append(paragraphe)
-            #print(editedParagraphe[-1])
-        #print(paragraphes)
+        editedParagraphe = [None,None]
+        editedParagraphes = [None,None]
 
-"""
-        print(os.path.join("C:\\Users\\romai\\DatasetDeeplearning", file))
-        subs = pysrt.open(os.path.join("C:\\Users\\romai\\DatasetDeeplearning", file))
-        print(subs)
-        allSubtitles.append(subs)
-        fileName = file.split("_")
-        fileName = fileName[0].split(".")
-        filesName.append(fileName[0])
-        allSubtitles.append(subs)
-"""
+        for element in paragraphesWithoutSentences:
+            editedParagraphe[1] = [[str(element[1][0:12])] + [str(element[1][17:29])]]
+            editedParagraphe[0] = element[2][3:-1]
+            editedParagraphes.append(editedParagraphe)
+        with open('pkl/'+ file + '.pkl', 'wb') as outfile:
+            pickle.dump(editedParagraphes, outfile, pickle.HIGHEST_PROTOCOL)
