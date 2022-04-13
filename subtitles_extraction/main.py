@@ -35,22 +35,43 @@ if __name__ == '__main__':
         for i in range(3):
             paragraphes.pop(-1) # Remove blank lines at the end
 
+
         paragraphesWithoutSentences = []
         paragraphesWithSentences = []
         for element in paragraphes:
-            text = element[2][3:]
+            try:
+                text = element[2][3:]
 
-            if " " not in text:
-                paragraphesWithoutSentences.append(element)
-            else:
-                paragraphesWithSentences.append(element)
+                if " " not in text:
+                    paragraphesWithoutSentences.append(element)
+                else:
+                    paragraphesWithSentences.append(element)
+            except IndexError:
+                pass
 
-        editedParagraphe = [None,None]
-        editedParagraphes = [None,None]
-
+        editedParagraphes = []
         for element in paragraphesWithoutSentences:
-            editedParagraphe[1] = [[str(element[1][0:12])] + [str(element[1][17:29])]]
-            editedParagraphe[0] = element[2][3:-1]
-            editedParagraphes.append(editedParagraphe)
+                editedParagraphe = [None, None]
+                editedParagraphe[1] = [str(element[1][0:12])] + [str(element[1][17:29])]
+                editedParagraphe[0] = element[2][3:-1]
+                editedParagraphes.append(editedParagraphe)
         with open('pkl/'+ file + '.pkl', 'wb') as outfile:
             pickle.dump(editedParagraphes, outfile, pickle.HIGHEST_PROTOCOL)
+
+
+        sousTitres = editedParagraphes
+
+        for sousTitre in sousTitres:
+
+            heuresDebut = int(sousTitre[1][0][0:2])
+            minutesDebut = int(sousTitre[1][0][3:5])
+            secondesDebut = int(sousTitre[1][0][6:8])
+            millisecondesDebut = int(sousTitre[1][0][9:12])
+
+            heuresFin = int(sousTitre[1][1][0:2])
+            minutesFin = int(sousTitre[1][1][3:5])
+            secondesFin = int(sousTitre[1][1][6:8])
+            millisecondesFin = int(sousTitre[1][1][9:12])
+
+            tempsDebut = (heuresDebut * 3600 + minutesDebut * 60 + secondesDebut) * 1000 + millisecondesDebut
+            tempsFin = (heuresFin * 3600 + minutesFin * 60 + secondesFin) * 1000 + millisecondesFin
