@@ -2,107 +2,80 @@ import json
 import pickle
 from cv2 import cv2
 import mediapipe
-
-
-def keypointsToSt(fps, sousTitres, real_object_multi, real_object_world, dict):   # remplie dictionnaire dont key = sous titre et valeur liste [ keypoints multi, keypoints world ]
-    listOfKeypoints = []
-    listOfKeypoints_multi = []
-    listOfKeypoints_world = []
-
-    for v in range(len(sousTitres)):
-        i = (sousTitres[v][1]/1000) * fps
-        j = (sousTitres[v][2]/1000) * fps
-
-        for k in range(len(real_object_multi)):
-            if k>=i and k<=j:
-                listOfKeypoints.append(real_object_multi[k])
-        for k in range(len(real_object_world)):
-            if k>=i and k<=j:
-                listOfKeypoints.append(real_object_world[k])
-
-        listOfKeypoints.append(listOfKeypoints_multi)
-        listOfKeypoints.append(listOfKeypoints_world)
-
-        if sousTitres[v][0] in dict.keys():
-            dict[sousTitres[v][0]].append(listOfKeypoints)
-        else:
-            dict[sousTitres[v][0]] = []
-            dict[sousTitres[v][0]].append(listOfKeypoints)
-
-def transformationTime(sousTitres):      #retourne la liste des sous titres avec pou chacun d'eux le temps de début et de fin en millisecondes
-    timer_sousTitre = []
-
-    for sousTitre in sousTitres:
-        liste = []
-
-        heuresDebut = int(sousTitre[1][0][0:2])
-        minutesDebut = int(sousTitre[1][0][3:5])
-        secondesDebut = int(sousTitre[1][0][6:8])
-        millisecondesDebut = int(sousTitre[1][0][9:12])
-
-        heuresFin = int(sousTitre[1][1][0:2])
-        minutesFin = int(sousTitre[1][1][3:5])
-        secondesFin = int(sousTitre[1][1][6:8])
-        millisecondesFin = int(sousTitre[1][1][9:12])
-
-        tempsDebut = (heuresDebut * 3600 + minutesDebut * 60 + secondesDebut) * 1000 + millisecondesDebut
-        tempsFin = (heuresFin * 3600 + minutesFin * 60 + secondesFin) * 1000 + millisecondesFin
-
-        liste.append(sousTitre[0])
-        liste.append(tempsDebut)
-        liste.append(tempsFin)
-
-        timer_sousTitre.append(liste)
-
-    return timer_sousTitre
-
-
-
-
-
-
+import os
+from tqdm import tqdm
 
 if __name__ == '__main__':
     video = cv2.VideoCapture('1176340_1a1.mp4')
     fps = int(video.get(cv2.CAP_PROP_FPS))
-    dictKeypointSt = {}
-    print("fps : "+str(fps))
 
+    def convertToFrame(timecodeTab):
+        return parseToFrame(timecodeTab[0]), parseToFrame(timecodeTab[1])
 
-    with open("Multi_hand_landmarks/1176340_1a1.mp4.json", "r") as file:
-        multi_hand_landmarks = json.load(file)
+    def parseToFrame(timecode):
+        splitted = timecode.split(':')
+        hours_count = int(splitted[0])
+        minute_count = (int(hours_count) * 60) + int(splitted[1])
+        seconde_count = (int(minute_count) * 60) + float(splitted[2].replace(',', '.'))
 
-        real_object_multi = json.loads(multi_hand_landmarks)
-    #print(multi_hand_landmarks[15][0].landmark[3])
+        return seconde_count*fps
 
-    with open("multihand_world_landmarks/1176340_1a1.mp4(1).json", "r") as file:
-        multihand_world_landmarks = json.load(file)
-        real_object_world = json.loads(multi_hand_landmarks)
+    completeFileList = os.listdir("Multi_hand_landmarks")
+    filelist = []
+    for file in completeFileList:
+        if file.endswith('_1a1.mp4.json') or file.endswith('_1b1.mp4.json'):
+            filelist.append(file)
+    independantFileList = []
+    for file in filelist:
+        if file.endswith('_1a1.mp4.json'):
+            if file.split("_")[0] + "_1b1.mp4.json" not in independantFileList:
+                independantFileList.append(file)
+        elif file.endswith('_1b1.mp4.json'):
+            if file.split("_")[0] + "_1a1.mp4.json" not in independantFileList:
+                independantFileList.append(file)
+    for index in range(len(independantFileList)):
+        independantFileList[index] = independantFileList[index].split("_")[0]
 
-    with open("1176340_en.srt.pkl", "rb") as file:
-        sousTitres = pickle.load(file)
+    with tqdm(total=len(independantFileList)) as pbar:
+        pbar.desc = 'Advancement'
+        for file in independantFileList:
+            namefile = file+'.mp4'
+            cap = cv2.VideoCapture(os.path.join(r'\\FIXE_ROMAIN\DatasetDeeplearning', namefile))
+            # SUBTITLES
+            with open('srt/' + file + '_en.srt.pkl', 'rb') as infile:
+                subtitles = pickle.load(infile)
+            # MULTI HAND LANDMARKS
+            try:
+                with open('Multi_hand_landmarks/' + file + '_1a1.mp4.json') as infile:
+                    MHL_A_JString = json.load(infile)
+                    MHL_A = json.loads(MHL_A_JString)
+            except FileNotFoundError:
+                MHL_A_JString = None
+                MHL_A = None
+            try:
+                with open('Multi_hand_landmarks/' + file + '_1b1.mp4.json') as infile:
+                    MHL_B_JString = json.load(infile)
+                    MHL_B = json.loads(MHL_B_JString)
+            except FileNotFoundError:
+                MHL_B_JString = None
+                MHL_B = None
+            # MULTI HAND WORLD LANDMARKS
+            try:
+                with open('multihand_world_landmarks/' + file + '_1a1.mp4.json') as infile:
+                    MHWL_A_JString = json.load(infile)
+                    MHWL_A = json.loads(MHL_A_JString)
+            except FileNotFoundError:
+                MHWL_A_JString = None
+                MHWL_A = None
+            try:
+                with open('multihand_world_landmarks/' + file + '_1b1.mp4.json') as infile:
+                    MHWL_B_JString = json.load(infile)
+                    MHWL_B = json.loads(MHL_B_JString)
+            except FileNotFoundError:
+                MHWL_B_JString = None
+                MHWL_B = None
 
-    timer_sousTitre = transformationTime(sousTitres)
-
-    print(len(timer_sousTitre))
-    keypointsToSt(fps, timer_sousTitre, real_object_multi, real_object_world, dictKeypointSt)
-
-    print(dictKeypointSt['MUSS1*'][1])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            DatasetFeatures = [None, None]
+            DatasetClasses = [None]
+            for subtitle in subtitles:
+                print(subtitle)
