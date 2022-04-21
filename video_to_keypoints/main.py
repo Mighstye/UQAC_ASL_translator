@@ -19,6 +19,17 @@ if __name__ == '__main__':
             srt = ''
         if srt not in complete_file_list and srt != '':
             filelist.remove(file)
+    for file in filelist:
+        for file in filelist:
+            if file.endswith('1a1.mp4'):
+                jsonfile = file.replace('_1a1.mp4', '_1a1.mp4.json')
+            elif file.endswith('1b1.mp4'):
+                jsonfile = file.replace('_1b1.mp4', '_1b1.mp4.json')
+            else:
+                jsonfile = ''
+            alreadyTreated = os.listdir('json/MULTI_HAND_LANDMARKS')
+            if jsonfile in alreadyTreated or jsonfile == '':
+                filelist.remove(file)
     with tqdm(total=len(filelist)) as filepbar:
         filepbar.desc = 'Global advancement'
         for file in filelist:
@@ -65,7 +76,7 @@ if __name__ == '__main__':
                                 OUTPUT_MULTI_HAND_WORLD_LANDMARKS[frame][hand][landmark].append((x, y, z))
                     pbar.update(1)
             jsonString = json.dumps(OUTPUT_MULTI_HAND_WORLD_LANDMARKS)
-            with open('json/MULTI_HAND_WORLD_LANDMARKS/'+file+'.json', 'w') as outfile:
+            with open('json/MULTI_HAND_WORLD_LANDMARKS/' + file + '.json', 'w') as outfile:
                 json.dump(jsonString, outfile)
             with tqdm(total=len(RESULT_multi_hand_landmarks)) as pbar:
                 pbar.desc = 'Creating MULTI_HAND_LANDMARKS'
@@ -83,7 +94,7 @@ if __name__ == '__main__':
                                 OUTPUT_MULTI_HAND_LANDMARKS[frame][hand][landmark].append((x, y, z))
                     pbar.update(1)
             jsonString = json.dumps(OUTPUT_MULTI_HAND_LANDMARKS)
-            with open('json/MULTI_HAND_LANDMARKS/'+file+'.json', 'w') as outfile:
+            with open('json/MULTI_HAND_LANDMARKS/' + file + '.json', 'w') as outfile:
                 json.dump(jsonString, outfile)
             with tqdm(total=len(RESULT_multi_handedness)) as pbar:
                 pbar.desc = 'Creating MULTI_HANDEDNESS'
@@ -99,7 +110,7 @@ if __name__ == '__main__':
                             OUTPUT_MULTI_HANDEDNESS[frame][hand].append((index, score, label))
                     pbar.update(1)
             jsonString = json.dumps(OUTPUT_MULTI_HANDEDNESS)
-            with open('json/MULTI_HANDEDNESS/'+file+'.json', 'w') as outfile:
+            with open('json/MULTI_HANDEDNESS/' + file + '.json', 'w') as outfile:
                 json.dump(jsonString, outfile)
             cap.release()
             os.system('cls')
